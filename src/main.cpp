@@ -2,7 +2,7 @@
 #include <sqeel.h>
 
 const std::string BOT_TOKEN =
-    "ODkyNDY4MTAzMjkwNjkxNjM1.G9NDKd._GbntknqDIV3tu5OScSa0EaWPgFeIt2-d46v9o";
+    "";
 
 int main() {
     Sqeel sql("users.db");
