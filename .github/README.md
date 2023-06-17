@@ -1,7 +1,7 @@
-# Project Name - Project Type
+# Toaster - Community Discord Bot
 
 ## About
-> Coming Soon!
+A Discord Bot made for our community
 
 ## Documentation
 
@@ -9,7 +9,10 @@
 
 #### Linux (Debian Based)
 
-> Coming Later!
+1. Install the Toolchain
+```bash
+sudo apt install libdpp libsqlite3-dev
+```
 
 #### Linux (Arch Based)
 
