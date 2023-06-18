@@ -14,6 +14,7 @@ set(SOURCES
 set(LIBRARIES
     dpp
     sqlite3
+    mpg123
 )
 
 # Project
