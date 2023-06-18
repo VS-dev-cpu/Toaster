@@ -28,25 +28,21 @@ std::string getToken(std::string path) {
 
 /* For an example we will hardcode a path to some awesome music here */
 int main(int argc, char const *argv[]) {
-    /* This will hold the decoded MP3.
-     * The D++ library expects PCM format, which are raw sound
-     * data, 2 channel stereo, 16 bit signed 48000Hz.
-     */
+    // RAW PCM: data, 2 channel stereo, 16 bit signed 48000Hz.
     std::vector<uint8_t> pcmdata;
 
-    /* Setup the bot */
+    // Setup Bot
     dpp::cluster bot(getToken("../TOKEN"),
                      dpp::i_default_intents | dpp::i_message_content);
 
-    bot.on_log(dpp::utility::cout_logger());
+    // bot.on_log(dpp::utility::cout_logger());
 
-    /* Use the on_message_create event to look for commands */
+    // onMessage()
     bot.on_message_create([&bot, &pcmdata](const dpp::message_create_t &event) {
         char cmd[64], data[256];
         sscanf(event.msg.content.c_str(), "%s %[^\n]", cmd, data);
 
-        /* Tell the bot to join the discord voice channel the user is on.
-         * Syntax: .join */
+        // Join Voice Channel
         if (!strcmp(cmd, ".join")) {
             dpp::guild *g = dpp::find_guild(event.msg.guild_id);
             if (!g->connect_member_voice(event.msg.author.id)) {
