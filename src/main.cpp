@@ -7,9 +7,14 @@
 #include <DataBase.hpp>
 
 #include <fileutil.hpp>
+#include <math.h>
 #include <string>
 
-void onMessage(const dpp::message_create_t &event) {}
+int min(int a, int b) {
+    if (a < b)
+        return a;
+    return b;
+}
 
 int main(int argc, char const *argv[]) {
     std::vector<std::string> files;
@@ -23,9 +28,8 @@ int main(int argc, char const *argv[]) {
 
     bot.on_log(dpp::utility::cout_logger());
 
-    bot.on_message_create(onMessage);
-
-    auto lOnMessage = [&](const dpp::message_create_t &event) {
+    // onMessage()
+    bot.on_message_create([&](const dpp::message_create_t &event) {
         char cmd[64], data[256];
         sscanf(event.msg.content.c_str(), "%s %[^\n]", cmd, data);
 
@@ -33,7 +37,7 @@ int main(int argc, char const *argv[]) {
         if (!strcmp(cmd, ".join")) {
             dpp::guild *g = dpp::find_guild(event.msg.guild_id);
             if (!g->connect_member_voice(event.msg.author.id)) {
-                bot.message_create(dpp::message(
+                event.reply(dpp::message(
                     event.msg.channel_id,
                     "You don't seem to be on a voice channel! :("));
             }
@@ -47,17 +51,6 @@ int main(int argc, char const *argv[]) {
                 std::string(data);
 
             system(("cd audio && yt-dlp -x --audio-format mp3 " + url).c_str());
-        }
-
-        // Get Music
-        if (!strcmp(cmd, ".fetch")) {
-            uint id = 0;
-            int n = sscanf(data, "%i", &id);
-
-            if (n != 1 || id >= files.size())
-                event.reply("ID out of index!\n");
-            else
-                event.reply(files[id]);
         }
 
         // List Musics
@@ -79,35 +72,24 @@ int main(int argc, char const *argv[]) {
 
         // Play Music from YouTube
         if (!strcmp(cmd, ".play")) {
-            uint id = 0, count = 0;
-            int n = sscanf(data, "%i %i", &id, &count);
-
-            if (count == 0)
-                count = 1;
+            uint id = 0;
+            if (sscanf(data, "%i", &id) < 1)
+                id = rand() % files.size();
 
             if (id >= files.size())
                 event.reply("ID out of index!\n");
             else {
-                if (n < 1)
-                    id = rand() % files.size();
-
                 event.reply("Playing: " + files[id]);
 
                 std::vector<uint8_t> pcmdata;
                 loadMusic(pcmdata, ("audio/" + files[id]).c_str());
 
-                // Play
                 dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
                 if (v && v->voiceclient && v->voiceclient->is_ready()) {
-                    /* Stream the already decoded MP3 file. This passes the
-                     * PCM data to the library to be encoded to OPUS */
-                    for (int i = 0; i < count; i++)
-                        v->voiceclient->send_audio_raw(
-                            (uint16_t *)pcmdata.data(), pcmdata.size());
+                    v->voiceclient->send_audio_raw((uint16_t *)pcmdata.data(),
+                                                   pcmdata.size());
 
                     v->voiceclient->insert_marker();
-
-                    // TODO: Real-Time Streaming for Better Performance
                 }
             }
         }
@@ -125,21 +107,16 @@ int main(int argc, char const *argv[]) {
 
         if (!strcmp(cmd, ".stop")) {
             dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
-
             if (v && v->voiceclient && v->voiceclient->is_ready())
                 v->voiceclient->stop_audio();
         }
 
         if (!strcmp(cmd, ".skip")) {
             dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
-
             if (v && v->voiceclient && v->voiceclient->is_ready())
                 v->voiceclient->skip_to_next_marker();
         }
-    };
-
-    // onMessage()
-    bot.on_message_create(lOnMessage);
+    });
 
     // Start Bot
     bot.start(dpp::st_wait);
