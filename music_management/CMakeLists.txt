@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Source Files
@@ -9,17 +9,11 @@ set(SOURCES
 )
 
 # Libraries
-set(LIBRARIES
-    dpp
-    mpg123
-    DataBase
-)
+set(LIBRARIES DataBase)
 
 # Project
-project(Toaster VERSION 0.1.0 LANGUAGES C CXX)
+project(mm VERSION 0.1.0 LANGUAGES C CXX)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
-
-add_subdirectory(DataBase)
-add_subdirectory(music_management)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

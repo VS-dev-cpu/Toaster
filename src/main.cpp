@@ -13,6 +13,8 @@
 #include <out123.h>
 #include <vector>
 
+#include <DataBase.hpp>
+
 // Get Token from File
 std::string getToken(std::string path) {
     std::ifstream f(path);
@@ -97,6 +99,17 @@ int main(int argc, char const *argv[]) {
             system(("cd audio && yt-dlp -x --audio-format mp3 " + url).c_str());
         }
 
+        // Get Music
+        if (!strcmp(cmd, ".fetch")) {
+            uint id = 0;
+            int n = sscanf(data, "%i", &id);
+
+            if (n != 1 || id >= files.size())
+                event.reply("ID out of index!\n");
+            else
+                event.reply(files[id]);
+        }
+
         // List Musics
         if (!strcmp(cmd, ".list")) {
             scanForFiles(files);
@@ -116,13 +129,16 @@ int main(int argc, char const *argv[]) {
 
         // Play Music from YouTube
         if (!strcmp(cmd, ".play")) {
-            uint id = 0;
-            int n = sscanf(data, "%i", &id);
+            uint id = 0, count = 0;
+            int n = sscanf(data, "%i %i", &id, &count);
+
+            if (count == 0)
+                count = 1;
 
             if (id >= files.size())
                 event.reply("ID out of index!\n");
             else {
-                if (n != 1)
+                if (n < 1)
                     id = rand() % files.size();
 
                 event.reply("Playing: " + files[id]);
@@ -173,8 +189,11 @@ int main(int argc, char const *argv[]) {
                 if (v && v->voiceclient && v->voiceclient->is_ready()) {
                     /* Stream the already decoded MP3 file. This passes the PCM
                      * data to the library to be encoded to OPUS */
-                    v->voiceclient->send_audio_raw((uint16_t *)pcmdata.data(),
-                                                   pcmdata.size());
+                    for (int i = 0; i < count; i++)
+                        v->voiceclient->send_audio_raw(
+                            (uint16_t *)pcmdata.data(), pcmdata.size());
+
+                    // TODO: Real-Time Streaming for Better Performance
                 }
             }
         }
