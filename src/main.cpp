@@ -1,13 +1,13 @@
+#include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <dpp/dpp.h>
 #include <dpp/presence.h>
-
-#include <mpg123.h>
-#include <out123.h>
 
 #include <DataBase.hpp>
 
 #include <fileutil.hpp>
+#include <string>
 
 void onMessage(const dpp::message_create_t &event) {}
 
@@ -16,9 +16,6 @@ int main(int argc, char const *argv[]) {
     srand(time(0));
 
     scanForFiles(files);
-
-    // RAW PCM: data, 2 channel stereo, 16 bit signed 48000Hz.
-    std::vector<uint8_t> pcmdata;
 
     // Setup Bot
     dpp::cluster bot(getToken("../TOKEN"),
@@ -73,8 +70,8 @@ int main(int argc, char const *argv[]) {
             else {
                 std::string list;
 
-                for (auto f : files)
-                    list += f + "\n";
+                for (size_t f = 0; f < files.size(); f++)
+                    list += std::to_string(f) + ": " + files[f] + "\n";
 
                 event.reply("Available Audio Files:\n" + list);
             }
@@ -96,46 +93,8 @@ int main(int argc, char const *argv[]) {
 
                 event.reply("Playing: " + files[id]);
 
-                // Load Music
-                pcmdata.clear();
-                mpg123_init();
-
-                int err = 0;
-                unsigned char *buffer;
-                size_t buffer_size, done;
-                int channels, encoding;
-                long rate;
-
-                /* Note it is important to force the frequency to 48000 for
-                 * Discord compatibility */
-                mpg123_handle *mh = mpg123_new(NULL, &err);
-                mpg123_param(mh, MPG123_FORCE_RATE, 48000, 48000.0);
-
-                /* Decode entire file into a vector. You could do this on
-                 * the fly, but if you do that you may get timing issues if
-                 * your CPU is busy at the time and you are streaming to a
-                 * lot of channels/guilds.
-                 */
-                buffer_size = mpg123_outblock(mh);
-                buffer = new unsigned char[buffer_size];
-
-                /* Note: In a real world bot, this should have some error
-                 * logging */
-                mpg123_open(mh, ("audio/" + files[id]).c_str());
-                mpg123_getformat(mh, &rate, &channels, &encoding);
-
-                unsigned int counter = 0;
-                for (int totalBytes = 0; mpg123_read(mh, buffer, buffer_size,
-                                                     &done) == MPG123_OK;) {
-                    for (auto i = 0; i < buffer_size; i++) {
-                        pcmdata.push_back(buffer[i]);
-                    }
-                    counter += buffer_size;
-                    totalBytes += done;
-                }
-                delete buffer;
-                mpg123_close(mh);
-                mpg123_delete(mh);
+                std::vector<uint8_t> pcmdata;
+                loadMusic(pcmdata, ("audio/" + files[id]).c_str());
 
                 // Play
                 dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
@@ -146,9 +105,36 @@ int main(int argc, char const *argv[]) {
                         v->voiceclient->send_audio_raw(
                             (uint16_t *)pcmdata.data(), pcmdata.size());
 
+                    v->voiceclient->insert_marker();
+
                     // TODO: Real-Time Streaming for Better Performance
                 }
             }
+        }
+
+        if (!strcmp(cmd, ".pause")) {
+            dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
+
+            uint id = 0, count = 0;
+            if (sscanf(data, "%i", &id) < 1)
+                id = !v->voiceclient->is_paused();
+
+            if (v && v->voiceclient && v->voiceclient->is_ready())
+                v->voiceclient->pause_audio(id);
+        }
+
+        if (!strcmp(cmd, ".stop")) {
+            dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
+
+            if (v && v->voiceclient && v->voiceclient->is_ready())
+                v->voiceclient->stop_audio();
+        }
+
+        if (!strcmp(cmd, ".skip")) {
+            dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
+
+            if (v && v->voiceclient && v->voiceclient->is_ready())
+                v->voiceclient->skip_to_next_marker();
         }
     };
 
