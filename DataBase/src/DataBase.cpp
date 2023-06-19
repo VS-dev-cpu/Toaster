@@ -3,15 +3,21 @@
 DataBase::DataBase(const char *file) {
     rc = sqlite3_open(file, &db);
 
-    if (rc != SQLITE_OK)
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-    else
-        fprintf(stdout, "Opened database\n");
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Can't open DataBase: %s\n", sqlite3_errmsg(db));
+        db = nullptr;
+    } else
+        fprintf(stdout, "Opened DataBase\n");
 }
 
-DataBase::~DataBase() { sqlite3_close(db); }
+DataBase::~DataBase() {
+    if (db != nullptr) {
+        sqlite3_close(db);
+        fprintf(stdout, "Closed DataBase\n");
+    }
+}
 
-const char *DataBase::execute(const char *op, ...) {
+bool DataBase::execute(const char *op, ...) {
     char *sql;
 
     va_list args;
@@ -23,18 +29,18 @@ const char *DataBase::execute(const char *op, ...) {
 
     if (rc != SQLITE_OK) {
         fprintf(stderr, "DataBase Error: %s\n", sqlite3_errmsg(db));
-        return "";
+        return false;
     }
 
-    return data.c_str();
+    return true;
 }
 
 int DataBase::callback(void *data, int argc, char **argv, char **azColName) {
     DataBase *it = static_cast<DataBase *>(data);
 
-    if (argc > 0 && argv[0] != nullptr) {
-        // Process the row data here
-        it->data = argv[0];
+    for (int i = 0; i < argc; i++) {
+        if (argv[i] != nullptr)
+            it->data.push_back(argv[0]);
     }
 
     return 0;

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cstring>
 #include <sqlite3.h>
 #include <stdio.h>
+#include <string.h>
+
 #include <string>
+#include <vector>
 
 class DataBase {
   public:
@@ -12,14 +14,15 @@ class DataBase {
 
     ~DataBase();
 
-    const char *execute(const char *op, ...);
+    bool execute(const char *op, ...);
+
+  public:
+    std::vector<std::string> data;
 
   private:
     sqlite3 *db;
 
     int rc = SQLITE_OK;
-
-    std::string data;
 
   private:
     static int callback(void *data, int argc, char **argv, char **azColName);

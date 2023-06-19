@@ -1,19 +1,23 @@
-#include <DataBase.hpp>
-#include <cstdio>
+#include <commands.hpp>
+
+// bool updateMusic(DataBase &db, )
 
 int main() {
-    DataBase db("test.db");
-    db.execute("CREATE TABLE IF NOT EXISTS social_credit (userid INTEGER "
-               "PRIMARY KEY,balance REAL NOT NULL);");
+    DataBase db("tracks.db");
 
-    db.execute("INSERT OR REPLACE INTO social_credit (userid, "
-               "balance) VALUES (%i, COALESCE((SELECT balance "
-               "FROM social_credit WHERE userid = %i), 0) + %i)",
-               1, 1, 2);
+    dbInit(db);
 
-    printf(
-        "%s\n",
-        db.execute("SELECT balance FROM social_credit WHERE userid = %i", 1));
+    int id =
+        dbInsert(db, "eve", "tokyo ghetto", "", "https://youtu.be/PvzBWFGEz8M");
+
+    printf("%s\n", db.data[0].c_str());
+
+    // db.execute("INSERT OR REPLACE INTO social_credit (userid, "
+    //            "balance) VALUES (%i, COALESCE((SELECT balance "
+    //            "FROM social_credit WHERE userid = %i), 0) + %i)",
+    //            1, 1, 2);
+
+    // db.execute("SELECT balance FROM social_credit WHERE userid = %i", 1);
 
     return 0;
 }
