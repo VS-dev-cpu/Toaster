@@ -8,6 +8,7 @@ set(LIBRARIES
     dpp
     mpg123
     DataBase
+    util
 )
 
 # Project

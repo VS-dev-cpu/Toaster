@@ -1,18 +1,15 @@
-cmake_minimum_required(VERSION 3.0.0)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-
 # Source Files
 set(SOURCES
-    src/DataBase.cpp
+    src/util.cpp
 )
 
 # Libraries
-set(LIBRARIES sqlite3)
+set(LIBRARIES
+    mpg123
+)
 
 # Project
-project(DataBase VERSION 0.1.0 LANGUAGES C CXX)
+project(util VERSION 0.1.0 LANGUAGES CXX)
 
 add_library(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})

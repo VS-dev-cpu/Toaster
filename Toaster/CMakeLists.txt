@@ -6,6 +6,7 @@ set(SOURCES
 # Libraries
 set(LIBRARIES
     dpp
+    util
 )
 
 # Project

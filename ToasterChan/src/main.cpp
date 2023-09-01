@@ -11,28 +11,29 @@
 #include <util.hpp>
 
 int main(int argc, char const *argv[]) {
+    // Set Random Seed
     srand(time(0));
-
-    // Scan for Audio Files
-    // std::vector<std::string> files;
-    // scanForFiles(files);
-
+    printf("%s\n", PROJECT_ROOT_DIR);
     // Attempt to update yt-dlp
-    system("../bin/yt-dlp -U");
+    system((std::string(PROJECT_ROOT_DIR) + "/lib/yt-dlp -U").c_str());
 
     // Init DataBases
-    DataBase tracks("tracks.db");
+    DataBase tracks("tracks.db"); // Database of every downloaded music
+    tracks.run("CREATE TABLE IF NOT EXISTS music ("
+               "id TEXT PRIMARY KEY,"   // // Youtube ID (also file name)
+               "creator TEXT NOT NULL," // User who added it
+               "title TEXT NOT NULL"    // Title
+               ");");
 
-    DataBase playlist("playlists.db");
+    // DataBase playlists("playlists.db"); // Database of playlists
+    // playlists.run("CREATE TABLE IF NOT EXISTS playlists ("
+    //               "id INTEGER PRIMARY KEY," // Playlist ID
+    //               "owner TEXT NOT NULL,"    // User who owns playlist
+    //               "name TEXT NOT NULL,"     // Name of the playlist
+    //               ");");
 
-    // Setup Bot
-    dpp::cluster bot(getToken("../TOKEN"),
-                     dpp::i_default_intents | dpp::i_message_content);
-
-    bot.on_log(dpp::utility::cout_logger());
-
-    // onMessage()
-    bot.on_message_create([&](const dpp::message_create_t &event) {
+    // onMessage Callback
+    auto onMessage = [&](const dpp::message_create_t &event) {
         char cmd[64], data[256];
         sscanf(event.msg.content.c_str(), "%s %[^\n]", cmd, data);
 
@@ -54,6 +55,14 @@ int main(int argc, char const *argv[]) {
 
             std::string id;
             int err = ytdlp(data, id);
+
+            if (!err)
+                err = !tracks.run("INSERT INTO music (id, creator, title)"
+                                  "VALUES ('%s', '%s', '%s');",
+                                  author.username.c_str(), "todo", id.c_str());
+
+            if (err)
+                event.reply("Sorry, i couldn't get this one!");
         }
 
         // // List Musics
@@ -121,9 +130,15 @@ int main(int argc, char const *argv[]) {
             if (v && v->voiceclient && v->voiceclient->is_ready())
                 v->voiceclient->skip_to_next_marker();
         }
-    });
+    };
 
-    // Start Bot
+    // Discord Bot
+    dpp::cluster bot(getToken("../../ToasterChan/TOKEN"),
+                     dpp::i_default_intents | dpp::i_message_content);
+    bot.on_log(dpp::utility::cout_logger());
+
+    bot.on_message_create(onMessage);
+
     bot.start(dpp::st_wait);
 
     return 0;
