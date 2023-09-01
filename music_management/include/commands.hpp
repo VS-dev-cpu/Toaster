@@ -12,17 +12,17 @@
 #define MUSIC_PROPERTY_TAGS 5
 
 bool dbInit(DataBase &db) {
-    return db.execute("CREATE TABLE IF NOT EXISTS music ("
-                      "id INTEGER PRIMARY KEY,"
+    return db.run("CREATE TABLE IF NOT EXISTS music ("
+                  "id INTEGER PRIMARY KEY,"
 
-                      "author TEXT,"
-                      "title TEXT NOT NULL,"
+                  "author TEXT,"
+                  "title TEXT NOT NULL,"
 
-                      "path TEXT,"
-                      "url TEXT,"
+                  "path TEXT,"
+                  "url TEXT,"
 
-                      "tags TEXT"
-                      ");");
+                  "tags TEXT"
+                  ");");
 }
 
 int dbInsert(DataBase &db, const char *author, const char *title,
@@ -53,17 +53,16 @@ int dbInsert(DataBase &db, const char *author, const char *title,
         return 0;
     }
 
-    bool success =
-        db.execute("INSERT INTO music(author, title, path, url, tags)"
-                   "VALUES('%s', '%s', '%s', '%s', '%s');",
-                   author, title, path, url, tags);
+    bool success = db.run("INSERT INTO music(author, title, path, url, tags)"
+                          "VALUES('%s', '%s', '%s', '%s', '%s');",
+                          author, title, path, url, tags);
 
     if (!success) {
         fprintf(stderr, "DATABASE ERROR: Failed to insert music\n");
         return 0;
     }
 
-    if (!db.execute("SELECT last_insert_rowid()"))
+    if (!db.run("SELECT last_insert_rowid()"))
         fprintf(stderr, "DATABASE WARNING: Failed to get insert ID\n");
 
     if (db.data.size() > 0)
@@ -93,4 +92,6 @@ bool dbUpdate(DataBase &db, int id, int property, const char *value) {
         return false;
         break;
     }
+
+    return true;
 }

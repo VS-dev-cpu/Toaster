@@ -14,7 +14,7 @@ class DataBase {
 
     ~DataBase();
 
-    bool execute(const char *op, ...);
+    bool run(const char *op, ...);
 
   public:
     std::vector<std::string> data;

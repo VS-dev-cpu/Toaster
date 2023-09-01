@@ -11,7 +11,9 @@ A Discord Bot made for our community
 
 1. Install the Toolchain
 ```bash
-sudo apt install libdpp libsqlite3-dev
+wget -O dpp.deb https://dl.dpp.dev/
+sudo dpkg -i dpp.deb
+sudo apt install libsqlite3-dev
 ```
 
 #### Linux (Arch Based)

@@ -17,7 +17,7 @@ DataBase::~DataBase() {
     }
 }
 
-bool DataBase::execute(const char *op, ...) {
+bool DataBase::run(const char *op, ...) {
     char *sql;
 
     va_list args;
