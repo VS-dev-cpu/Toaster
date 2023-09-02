@@ -7,6 +7,7 @@ set(SOURCES
 set(LIBRARIES
     dpp
     util
+    DataBase
 )
 
 # Project

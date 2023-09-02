@@ -50,20 +50,23 @@ int main(int argc, char const *argv[]) {
         }
 
         // Get Music
-        if (!strcmp(cmd, ".get")) {
-            // Download Music
+        // if (!strcmp(cmd, ".get")) {
+        //     // Download Music
 
-            std::string id;
-            int err = ytdlp(data, id);
+        //     std::string id;
+        //     int err = ytdlp(data, id);
 
-            if (!err)
-                err = !tracks.run("INSERT INTO music (id, creator, title)"
-                                  "VALUES ('%s', '%s', '%s');",
-                                  author.username.c_str(), "todo", id.c_str());
+        //     if (!err)
+        //         err = !tracks.run("INSERT INTO music (id, creator, title)"
+        //                           "VALUES ('%s', '%s', '%s');",
+        //                           author.username.c_str(), "todo",
+        //                           id.c_str());
 
-            if (err)
-                event.reply("Sorry, i couldn't get this one!");
-        }
+        //     if (err)
+        //         event.reply("Sorry, i couldn't get this one!");
+        //     else
+        //         event.reply("Done!");
+        // }
 
         // // List Musics
         // if (!strcmp(cmd, ".list")) {
@@ -82,31 +85,44 @@ int main(int argc, char const *argv[]) {
         //     }
         // }
 
-        // // Play Music from YouTube
-        // if (!strcmp(cmd, ".play")) {
-        //     uint id = 0;
-        //     if (sscanf(data, "%i", &id) < 1)
-        //         id = rand() % files.size();
+        // Play Music
+        if (!strcmp(cmd, ".play")) {
+            // TODO: music from playlist
+            // bool type = false;
+            // char source[64];
+            // int count = sscanf(data, "%63s", source);
 
-        //     if (id >= files.size())
-        //         event.reply("ID out of index!\n");
-        //     else {
-        //         event.reply("Playing: " + files[id]);
+            // if (sscanf(data, "%63s", source) <= 0)
+            //     event.reply("That's not enough information to play "
+            //                 "something!"); // TODO: play random
+            // else {
+            //     // TODO: check playlist, then music
+            // }
 
-        //         std::vector<uint8_t> pcmdata;
-        //         loadMusic(pcmdata, ("audio/" + files[id]).c_str());
+            // std::string id;
+            // ytdlp(data, id);
 
-        //         dpp::voiceconn *v =
-        //         event.from->get_voice(event.msg.guild_id); if (v &&
-        //         v->voiceclient && v->voiceclient->is_ready()) {
-        //             v->voiceclient->send_audio_raw((uint16_t
-        //             *)pcmdata.data(),
-        //                                            pcmdata.size());
+            system((std::string(PROJECT_ROOT_DIR) +
+                    "/lib/yt-dlp -x --audio-format mp3 "
+                    "--output 'audio/music' ytsearch:'" +
+                    data + "'")
+                       .c_str());
 
-        //             v->voiceclient->insert_marker();
-        //         }
-        //     }
-        // }
+            event.reply("Playing...");
+
+            std::vector<uint8_t> pcmdata;
+            loadMusic(pcmdata, "audio/music.mp3");
+
+            system("rm -r audio/music.mp3");
+
+            dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);
+            if (v && v->voiceclient && v->voiceclient->is_ready()) {
+                v->voiceclient->send_audio_raw((uint16_t *)pcmdata.data(),
+                                               pcmdata.size());
+
+                v->voiceclient->insert_marker();
+            }
+        }
 
         if (!strcmp(cmd, ".pause")) {
             dpp::voiceconn *v = event.from->get_voice(event.msg.guild_id);

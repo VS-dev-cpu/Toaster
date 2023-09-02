@@ -86,31 +86,58 @@ bool loadMusic(std::vector<uint8_t> &data, const char *path) {
     mpg123_close(mh);
     mpg123_delete(mh);
 
+    // TODO: cut off silence from beginning & end
+
     return true;
 }
 
 int ytdlp(std::string search, std::string &id) {
-    FILE *fp;
-    int return_code;
+    // FILE *fp;
+    // int return_code;
 
-    // Run the command and capture its output
+    // // Run the command and capture its output
+    // fp = popen((std::string(PROJECT_ROOT_DIR) +
+    //             "/lib/yt-dlp --no-warnings -x --audio-format mp3 "
+    //             "--output 'audio/%(id)s' ytsearch:'" +
+    //             search + "'")
+    //                .c_str(),
+    //            "r");
+
+    // if (fp == NULL) {
+    //     perror("popen");
+    //     return -1;
+    // }
+
+    // // Read the captured output
+    // id.resize(64);
+    // if (fgets(id.data(), 64, fp) == NULL)
+    //     perror("yt-dlp");
+
+    // return pclose(fp);
+
+    id.clear();
+
+    FILE *fp;
+    char path[1035];
+
+    /* Open the command for reading. */
     fp = popen((std::string(PROJECT_ROOT_DIR) +
-                "/lib/ytdlp --no-warnings -x --audio-format mp3 "
+                "/lib/yt-dlp -x --audio-format mp3 "
                 "--output 'audio/%(id)s' ytsearch:'" +
-                search + "'")
+                search + "' --get-id --no-warnings")
                    .c_str(),
                "r");
-
     if (fp == NULL) {
-        perror("popen");
-        return -1;
+        printf("Failed to run command\n");
+        exit(1);
+    }
+    id.resize(64);
+    /* Read the output a line at a time - output it. */
+    while (fgets(id.data(), 64, fp) != NULL) {
+        printf("%s", id.c_str());
     }
 
-    // Read the captured output
-    id.resize(64);
-    if (fgets(id.data(), 64, fp) == NULL)
-        perror("yt-dlp");
-
+    /* close */
     return pclose(fp);
 }
 

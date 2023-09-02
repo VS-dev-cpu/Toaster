@@ -13,7 +13,7 @@ A Discord Bot made for our community
 ```bash
 wget -O dpp.deb https://dl.dpp.dev/
 sudo dpkg -i dpp.deb
-sudo apt install libsqlite3-dev
+sudo apt install libsqlite3-dev libmpg123-dev
 ```
 
 #### Linux (Arch Based)
