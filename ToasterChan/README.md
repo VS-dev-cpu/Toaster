@@ -1,7 +1,8 @@
-# Toaster Chan Discord Bot
+# `Toaster Chan` Discord Bot
 
-This is our community bot
+Our Community Bot, responsible for having fun on the server
 
-It is responsible for having fun on the server
-
-It can play music and hang out with the members
+Tasks:
+- music player
+- image generator
+- other fun stuff

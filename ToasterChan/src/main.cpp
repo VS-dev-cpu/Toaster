@@ -1,11 +1,8 @@
-#include <cstddef>
 #include <cstdlib>
 #include <cstring>
-#include <math.h>
 #include <string>
 
 #include <dpp/dpp.h>
-#include <dpp/presence.h>
 
 #include <DataBase.hpp>
 #include <util.hpp>
@@ -13,7 +10,6 @@
 int main(int argc, char const *argv[]) {
     // Set Random Seed
     srand(time(0));
-    printf("%s\n", PROJECT_ROOT_DIR);
     // Attempt to update yt-dlp
     system((std::string(PROJECT_ROOT_DIR) + "/lib/yt-dlp -U").c_str());
 
@@ -149,8 +145,9 @@ int main(int argc, char const *argv[]) {
     };
 
     // Discord Bot
-    dpp::cluster bot(getToken("../../ToasterChan/TOKEN"),
-                     dpp::i_default_intents | dpp::i_message_content);
+    dpp::cluster bot( //
+        getenv("TOKEN_MOCHIMIX"),
+        dpp::i_default_intents | dpp::i_message_content);
     bot.on_log(dpp::utility::cout_logger());
 
     bot.on_message_create(onMessage);

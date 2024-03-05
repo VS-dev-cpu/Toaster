@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 configure_file(lib/config.h.in lib/config.h)
-include_directories(${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_BINARY_DIR}/lib)
 
 add_subdirectory(lib)
 

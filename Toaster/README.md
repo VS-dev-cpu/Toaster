@@ -2,4 +2,8 @@
 
 This bot's duty is to manage the minecraft server
 
-It also is our economy bot, it manages credits, etc
+Tasks:
+- economy
+- credit management
+- polls
+- server info
