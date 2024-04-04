@@ -1,20 +1,5 @@
 #include <util.hpp>
 
-std::string getToken(std::string path) {
-    std::ifstream f(path);
-
-    if (!f.is_open()) {
-        perror("getToken()");
-        fprintf(stderr, "Failed to open file\n");
-        exit(1);
-    }
-
-    std::string token((std::istreambuf_iterator<char>(f)),
-                      (std::istreambuf_iterator<char>()));
-
-    return token;
-}
-
 void scanForFiles(std::vector<std::string> &files, std::string folder,
                   std::vector<std::string> exts) {
     files.clear();

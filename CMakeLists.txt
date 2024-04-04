@@ -3,10 +3,30 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-configure_file(lib/config.h.in lib/config.h)
-include_directories(${CMAKE_BINARY_DIR}/lib)
+# Source Files
+set(SOURCES
+    src/main.cpp
 
-add_subdirectory(lib)
+    src/llm.cpp
+)
 
-add_subdirectory(Toaster)
-add_subdirectory(ToasterChan)
+# Libraries
+set(LIBRARIES
+    dpp
+
+    llama
+    common
+
+    # mpg123
+    # DataBase
+    # util
+)
+
+# Project
+project(ToasterChan VERSION 0.1.0 LANGUAGES C CXX)
+
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
+target_include_directories(${PROJECT_NAME} PUBLIC src/include)
+
+add_subdirectory(external)

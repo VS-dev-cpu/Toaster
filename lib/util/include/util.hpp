@@ -40,6 +40,3 @@ bool loadMusic(std::vector<uint8_t> &data, const char *path);
 // Scan Files in Folder
 void scanForFiles(std::vector<std::string> &files, std::string folder,
                   std::vector<std::string> exts = {});
-
-// Get Token from File
-std::string getToken(std::string path);
