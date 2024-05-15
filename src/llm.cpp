@@ -146,6 +146,39 @@ std::string LLM::reply(std::string author, std::string prompt,
     return generate();
 }
 
+bool LLM::save(const char *path) {
+    std::vector<uint8_t> state_mem(llama_state_get_size(llm.ctx));
+    const size_t written = llama_state_get_data(llm.ctx, state_mem.data());
+
+    FILE *f;
+    if (!(f = fopen(path, "wb")))
+        return false;
+
+    int fout = fwrite(state_mem.data(), 1, written, f);
+
+    fclose(f);
+
+    if (fout != written)
+        return false;
+    return true;
+}
+
+bool LLM::load(const char *path) {
+    std::vector<uint8_t> state_mem(llama_state_get_size(llm.ctx));
+
+    FILE *f;
+    if (!(f = fopen(path, "rb")))
+        return false;
+
+    const size_t read = fread(state_mem.data(), 1, state_mem.size(), f);
+    fclose(f);
+
+    if (read != llama_state_set_data(llm.ctx, state_mem.data()))
+        return false;
+
+    return true;
+}
+
 std::vector<llama_token> LLM::tokenize(std::string text) {
     return ::llama_tokenize(llm.ctx, text, true);
 }

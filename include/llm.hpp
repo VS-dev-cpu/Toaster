@@ -19,6 +19,12 @@ class LLM {
     std::string reply(std::string author, std::string prompt,
                       std::function<void(std::string)> onNewToken = {});
 
+    // Save KV Cache state
+    bool save(const char *path);
+
+    // Load KV Cache state
+    bool load(const char *path);
+
   private:
     std::vector<llama_token> tokenize(std::string text);
     bool decode(std::vector<llama_token> tokens);
