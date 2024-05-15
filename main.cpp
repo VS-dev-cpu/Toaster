@@ -35,7 +35,7 @@ int main(int argc, char const *argv[]) {
             auto &msg = chatbot.pool.messages.front();
 
             llm.decode(msg.author, msg.content);
-            chatbot.pool.messages.pop_front();
+            chatbot.pool.messages.pop();
             chatbot.pool.length--;
 
             printf("[pool size: %i] Decoded message\n",

@@ -25,7 +25,7 @@ Chatbot::Chatbot(std::string token)
         // Add to message pool
         // TODO format text for emojis, etc
         pool.channel = channel.text;
-        pool.messages.push_back({username, content});
+        pool.messages.push({username, content});
         pool.length++;
 
         printf("[pool size: %i] ", (int)pool.messages.size());

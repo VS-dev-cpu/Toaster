@@ -6,7 +6,7 @@
 #include <tts.hpp>
 
 #include <atomic>
-#include <list>
+#include <queue>
 
 struct Message {
     std::string author, content;
@@ -26,7 +26,7 @@ class Chatbot {
     // Message Pool
     struct {
         dpp::snowflake channel;
-        std::list<Message> messages;
+        std::queue<Message> messages;
         std::atomic<uint8_t> length;
     } pool{};
     // TODO
