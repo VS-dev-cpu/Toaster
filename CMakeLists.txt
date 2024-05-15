@@ -1,32 +1,35 @@
 cmake_minimum_required(VERSION 3.0.0)
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
-# Source Files
+project(ToasterChan LANGUAGES C CXX)
+
 set(SOURCES
-    src/main.cpp
+    main.cpp
 
     src/llm.cpp
+
+    src/piper.cpp
+    src/stt.cpp
+    src/tts.cpp
+
+    src/chatbot.cpp
 )
 
-# Libraries
 set(LIBRARIES
     dpp
 
     llama
     common
 
-    # mpg123
-    # DataBase
-    # util
-)
+    espeak-ng
+    onnxruntime
+    piper_phonemize
 
-# Project
-project(ToasterChan VERSION 0.1.0 LANGUAGES C CXX)
+    whisper
+    wcommon
+)
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} ${LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC src/include)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 add_subdirectory(external)

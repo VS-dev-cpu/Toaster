@@ -5,50 +5,58 @@
 
 void cb_log_disable(enum ggml_log_level, const char *, void *) {}
 
-LLM::LLM(const char *model, const char *prompt) {
+LLM::LLM(const char *modelPath, const char *promptPath) {
     // Disable Logging
     llama_log_set(cb_log_disable, NULL);
 
-    // init LLM
-    llama_backend_init();
-    llama_numa_init(GGML_NUMA_STRATEGY_DISABLED);
+    /* Load LLM */ {
+        // init LLM
+        llama_backend_init();
+        llama_numa_init(GGML_NUMA_STRATEGY_DISABLED);
 
-    // initialize the model
-    llama_model_params model_params = llama_model_default_params();
+        // initialize the model
+        llama_model_params model_params = llama_model_default_params();
 
-    if (!(llm.model = llama_load_model_from_file(model, model_params)))
-        throw std::runtime_error(std::string(__func__) +
-                                 ": failed to load model");
+        if (!(llm.model = llama_load_model_from_file(modelPath, model_params)))
+            throw std::runtime_error("LLM(): failed to load model");
 
-    // initialize the context
-    llama_context_params ctx_params = llama_context_default_params();
+        // initialize the context
+        llama_context_params ctx_params = llama_context_default_params();
 
-    ctx_params.seed = -1;
-    ctx_params.n_ctx = 2048;
-    ctx_params.n_threads = ctx_params.n_threads_batch =
-        get_num_physical_cores();
+        ctx_params.seed = rand();
+        ctx_params.n_ctx = 2048;
+        ctx_params.n_threads = ctx_params.n_threads_batch =
+            get_num_physical_cores();
 
-    if (!(llm.ctx = llama_new_context_with_model(llm.model, ctx_params)))
-        throw std::runtime_error(std::string(__func__) +
-                                 ": failed to create the llama_context");
+        if (!(llm.ctx = llama_new_context_with_model(llm.model, ctx_params)))
+            throw std::runtime_error(
+                "LLM(): failed to create the llama_context");
+    }
 
     // Create Batch
     llm.batch = llama_batch_init(512, 0, 1);
 
-    // Process Prompt
-    std::vector<llama_token> tokens;
-    std::vector<llama_token> tmp;
+    char *prompt = NULL;
+    /* Load Prompt */ {
+        // Open File
+        FILE *f = NULL;
+        if (!(f = fopen(promptPath, "r")))
+            throw std::runtime_error("LLM(): failed to open prompt file");
 
-    tmp = tokenize("<|system|>");
-    tmp.push_back(llama_token_nl(llm.model));
-    tokens.insert(tokens.end(), tmp.begin(), tmp.end());
+        // Get File Size
+        fseek(f, 0, SEEK_END);
+        size_t size = ftell(f);
+        fseek(f, 0, SEEK_SET);
 
-    tmp = tokenize(prompt);
-    tmp.push_back(llama_token_eos(llm.model));
-    tmp.push_back(llama_token_nl(llm.model));
-    tokens.insert(tokens.end(), tmp.begin(), tmp.end());
+        // Read File
+        prompt = (char *)malloc(sizeof(char) * size);
 
-    decode(tokens);
+        if (!fread(prompt, size, 1, f))
+            throw std::runtime_error("LLM(): failed to read prompt");
+    }
+
+    // Decode Prompt
+    decode(tokenize("<|system|>\n" + std::string(prompt) + "\n"));
 
     // TODO: may need
     // llama_batch_clear(llm.batch);
@@ -63,29 +71,14 @@ LLM::~LLM() {
     llama_backend_free();
 }
 
-std::string LLM::reply(std::string author, std::string prompt,
-                       std::function<void(std::string)> onNewToken) {
-    /* Get User Input */ {
-        std::vector<llama_token> tokens;
-        std::vector<llama_token> tmp;
+bool LLM::decode(std::string author, std::string text) {
+    return decode(tokenize("<|" + author + "|>\n" + text + "\n"));
+}
 
-        tmp = tokenize("<|" + author + "|>");
-        tmp.push_back(llama_token_nl(llm.model));
-        tokens.insert(tokens.end(), tmp.begin(), tmp.end());
-
-        tmp = tokenize(prompt);
-        tmp.push_back(llama_token_eos(llm.model));
-        tmp.push_back(llama_token_nl(llm.model));
-        tokens.insert(tokens.end(), tmp.begin(), tmp.end());
-
-        tmp = tokenize("<|Toaster Chan|>");
-        tmp.push_back(llama_token_nl(llm.model));
-        tokens.insert(tokens.end(), tmp.begin(), tmp.end());
-
-        decode(tokens);
-    }
-
+std::string LLM::generate(std::function<void(std::string)> onNewToken) {
     std::string out;
+
+    decode(tokenize("<|" + myself + "|>\n"));
 
     int n_len = llm.n_cur + 64;
     while (true) {
@@ -110,11 +103,16 @@ std::string LLM::reply(std::string author, std::string prompt,
                 llama_sample_token_greedy(llm.ctx, &candidates_p);
 
             // is it an end of stream?
-            if (new_token_id == llama_token_eos(llm.model) ||
-                llm.n_cur == n_len)
+            if (new_token_id == llama_token_eos(llm.model))
+                //  || llm.n_cur == n_len)
                 break;
 
             std::string token = llama_token_to_piece(llm.ctx, new_token_id);
+
+            if (token == "<" || token == " <" || token == "<|" ||
+                token == " <|")
+                break;
+
             out += token;
 
             onNewToken(token); // call callback
@@ -137,9 +135,15 @@ std::string LLM::reply(std::string author, std::string prompt,
                                      ": failed to eval");
     }
 
-    llama_batch_clear(llm.batch);
+    // llama_batch_clear(llm.batch);
 
     return out;
+}
+
+std::string LLM::reply(std::string author, std::string prompt,
+                       std::function<void(std::string)> onNewToken) {
+    decode(author, prompt);
+    return generate();
 }
 
 std::vector<llama_token> LLM::tokenize(std::string text) {
@@ -147,27 +151,19 @@ std::vector<llama_token> LLM::tokenize(std::string text) {
 }
 
 bool LLM::decode(std::vector<llama_token> tokens) {
-    for (size_t i = 0; i < tokens.size(); i++)
-        llama_batch_add(llm.batch,
-                        tokens[i] == '\0' ? llama_token_eos(llm.model)
-                                          : tokens[i],
-                        llm.n_cur + i, {0}, false);
+    llama_batch_clear(llm.batch);
+
+    const size_t size = tokens.size();
+    for (size_t i = 0; i < size; i++)
+        llama_batch_add(llm.batch, tokens[i], llm.n_cur + i, {0},
+                        i == size - 1);
 
     llm.n_cur += tokens.size();
-
-    llm.batch.logits[llm.batch.n_tokens - 1] = true;
 
     if (llama_decode(llm.ctx, llm.batch) != 0) {
         fprintf(stderr, "%s: llama_decode() failed\n", __func__);
         return true;
     }
 
-    llm.batch.logits[llm.batch.n_tokens - 1] = false;
-
     return false;
-}
-
-bool LLM::decode(std::string text) {
-    std::vector<llama_token> tokens = tokenize(text);
-    return decode(tokens);
 }

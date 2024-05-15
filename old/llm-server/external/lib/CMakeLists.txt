@@ -1,0 +1,1 @@
+target_link_directories(llm-server PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp)
